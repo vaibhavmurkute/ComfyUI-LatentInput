@@ -144,7 +144,6 @@ cython_debug/
 *.ckpt
 *.jpeg
 *.jpg
-*.png
 *.gif
 *.latent
 *.wav
