@@ -40,7 +40,7 @@ class WorkflowImageFileLoader:
                 "workflow_json": ("STRING", {
                     "multiline": True,
                     "default": "",
-                    "placeholder": "可选：手动输入workflow JSON，如果图片中没有workflow信息"
+                    "placeholder": "Optional: Manually input workflow JSON if the image lacks workflow information."
                 }),
             }
         }
@@ -261,7 +261,7 @@ class WorkflowImageLoader:
                 "workflow_json": ("STRING", {
                     "multiline": True,
                     "default": "",
-                    "placeholder": "必须手动输入workflow JSON，因为IMAGE类型不包含原始图片元数据"
+                    "placeholder": "Manual workflow JSON is required as the IMAGE type does not contain original metadata."
                 }),
             }
         }
@@ -409,7 +409,7 @@ class WorkflowJSONParser:
                 "workflow_json": ("STRING", {
                     "multiline": True,
                     "default": "",
-                    "placeholder": "粘贴ComfyUI workflow JSON"
+                    "placeholder": "Paste ComfyUI workflow JSON here"
                 }),
             }
         }
@@ -552,7 +552,7 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "WorkflowImageFileLoader": "Workflow图片文件加载器",
-    "WorkflowImageLoader": "Workflow图片加载器",
-    "WorkflowJSONParser": "Workflow JSON解析器",
+    "WorkflowImageFileLoader": "Workflow Image Loader (File)",
+    "WorkflowImageLoader": "Workflow Image Loader (Image)",
+    "WorkflowJSONParser": "Workflow JSON Parser",
 } 
