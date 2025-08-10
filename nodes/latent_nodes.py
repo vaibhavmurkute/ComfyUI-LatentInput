@@ -22,9 +22,18 @@ class LatentLoaderAdvanced:
     CATEGORY = "ComfyUI-Only/Latent"
     
     def load_latent(self, latent_file):
-        latent_path = folder_paths.get_annotated_filepath(latent_file)
+        if latent_file.startswith("temp/"):
+            filename = latent_file[len("temp/"):]
+            # 直接、安全地构建临时文件的完整路径
+            temp_dir = folder_paths.get_temp_directory()
+            latent_path = os.path.abspath(os.path.join(temp_dir, filename))
+            # 安全检查：确保最终路径在 temp 目录内，防止目录遍历攻击
+            if not latent_path.startswith(os.path.abspath(temp_dir)):
+                raise FileNotFoundError(f"Invalid path specified: {latent_file}")
+        else:
+            latent_path = folder_paths.get_annotated_filepath(latent_file)
         
-        if not os.path.exists(latent_path):
+        if not latent_path or not os.path.exists(latent_path):
             raise FileNotFoundError(f"File not found at path: {latent_path}.")
 
         latent_data = None

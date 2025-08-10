@@ -14,8 +14,10 @@ app.registerExtension({
 				const uploadFile = async (file) => {
 					try {
 						const body = new FormData();
+						// 将文件上传到临时目录，以避免覆盖问题
 						body.append("image", file);
 						body.append("overwrite", "true");
+						body.append("type", "temp"); // <--- 添加这一行
 						const resp = await api.fetchApi("/upload/image", {
 							method: "POST",
 							body,
@@ -23,7 +25,8 @@ app.registerExtension({
 
 						if (resp.status === 200) {
 							const data = await resp.json();
-							const path = data.subfolder ? `${data.subfolder}/${data.name}` : data.name;
+							// 确保路径包含了 subfolder 和 type
+							const path = `${data.type}/${data.subfolder ? `${data.subfolder}/` : ''}${data.name}`;
 							const textWidget = this.widgets.find((w) => w.name === "latent_file");
 							if (textWidget) {
 								textWidget.value = path;
