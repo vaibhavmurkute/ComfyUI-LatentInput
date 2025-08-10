@@ -1,92 +1,113 @@
+[Read this document in Chinese (简体中文)](./docs/zh-CN.md)
+
 # ComfyUI-Only
 
-ComfyUI自定义节点集合，最初专注于workflow解析，现已扩展至提供高级文件加载功能。
+A collection of custom nodes for ComfyUI, initially focused on workflow parsing, now expanded to provide advanced file loading features designed to enhance your workflow efficiency and experience.
 
-## 🌟 主要功能
+## 🌟 Key Features
 
-### 1. 高级Latent加载器 (Load Latent (Advanced)) ⭐全新功能
+### 1. Load Latent (Advanced) ⭐ Core Feature
+- 📤 **Upload from Anywhere**: Select `.latent` files from anywhere on your computer using the "Upload Latent" button, eliminating the need to place them in the `input` folder.
+- ✨ **Drag and Drop**: Upload `.latent` files by simply dragging them from your file manager onto the node.
+- 🔄 **Smart Format Compatibility**: Automatically detects and supports both standard `pickle` and high-speed `safetensors` formats.
+- 🤖 **Intelligent Structure Parsing**: Automatically parses various internal latent structures, whether it's the standard `samples` key, the non-standard `latent_tensor` key, or even a raw tensor.
+- 🔢 **Smart Dimension Handling**: Automatically processes 3D (image), 4D (batched images), and 5D (video) latent tensors to ensure compatibility with downstream nodes like VAEDecode.
 
-- 📤 **从任意位置上传**：通过“Upload Latent”按钮，直接从您电脑的任何地方选择 `.latent` 文件。
-- ✨ **拖拽上传**：将 `.latent` 文件直接从您的文件管理器拖拽到节点上即可上传。
-- 🔄 **智能格式兼容**：自动识别并兼容标准的 `pickle` 格式和高速的 `safetensors` 格式。
-- 🤖 **智能结构解析**：自动解析多种 latent 内部结构，无论是标准的 `samples` 键，还是非标准的 `latent_tensor` 键，甚至是裸张量。
-- 🔢 **智能维度处理**：自动处理3D（图像）、4D（带批次的图像）和5D（视频）的 latent 张量，确保与下游节点（如VAEDecode）的兼容性。
-
-### 2. Workflow图片文件加载器 (WorkflowImageFileLoader)
-
-- 📁 直接从文件系统加载图片文件
-- 🔍 自动解析图片中的workflow元数据信息
-- 🎯 智能提取positive和negative提示词
-- 🏷️ 提取CheckpointLoaderSimple节点的模型名称
-- 📋 支持手动输入workflow JSON作为备选
-- ✅ **解决了IMAGE类型不包含元数据的问题**
+### 2. WorkflowImageFileLoader
+- 📁 **Direct File Loading**: Load image files directly from your file system.
+- 🔍 **Auto-Parse Metadata**: Automatically parses workflow metadata from the image.
+- 🎯 **Smart Prompt Extraction**: Intelligently extracts positive and negative prompts.
+- 🏷️ **Smart Model Extraction**: Extracts the model name from the CheckpointLoaderSimple node.
+- ✅ **Solves a Core Problem**: Addresses the issue where the native `IMAGE` type does not contain metadata, making workflow reuse difficult.
 
 ---
 
-*（为保持简洁，其他旧节点说明已折叠，您可以在旧版本中查看它们）*
+*(Older node descriptions have been collapsed for brevity.)*
 
-## 🚀 快速开始
+## 🚀 Installation & Setup
 
-### 安装
-1. 将此项目克隆到ComfyUI的`custom_nodes`目录下。
-2. （可选）安装依赖：`pip install -r requirements.txt`
-3. 重启ComfyUI。
-4. 在节点菜单中找到`ComfyUI-Only`分类。
+### Recommended Method: Install via ComfyUI Manager
+1.  **Install ComfyUI Manager**: If you haven't already, install it by following the [official ComfyUI Manager instructions](https://github.com/ltdrdata/ComfyUI-Manager).
+2.  **Search for the Node**:
+    -   Launch ComfyUI.
+    -   Click the "Manager" button in the sidebar.
+    -   Click "Install Custom Nodes".
+    -   Type `ComfyUI-Only` or `eric183` in the search bar.
+3.  **Install Node**: Find this extension in the search results and click the "Install" button.
+4.  **Restart ComfyUI**: After installation, restart ComfyUI.
 
-### 使用方法
+### Alternative Method: Manual Installation (Git Clone)
+1.  **Navigate to Directory**: Open a terminal and navigate to the `custom_nodes` directory within your ComfyUI installation.
+    ```bash
+    cd path/to/your/ComfyUI/custom_nodes
+    ```
+2.  **Clone the Repository**: Use the `git clone` command to clone this repository.
+    ```bash
+    git clone https://github.com/eric183/ComfyUI-Only.git
+    ```
+3.  **Check Dependencies**: Ensure that the `safetensors` library is installed in your Python environment. ComfyUI usually includes it, but if you encounter import errors, install it manually:
+    ```bash
+    pip install safetensors
+    ```
+4.  **Restart ComfyUI**: Restart ComfyUI to load the new nodes.
 
-#### ⭐ 加载Latent文件 (推荐)
-1. 在菜单中添加 `Load Latent (Advanced)` 节点。
-2. 点击 `Upload Latent` 按钮从您的电脑中选择一个 `.latent` 文件。
-3. 或者，直接将 `.latent` 文件拖拽到节点上。
-4. 节点会自动处理上传、解析和格式化，然后将 `LATENT` 输出连接到下一个节点（如 `VAEDecode`）。
+## 📖 How to Use
 
-#### 解析图片中的Workflow
-1. 添加 `Workflow图片文件加载器` 节点。
-2. 在 `image_file` 下拉菜单中选择要解析的图片文件。
-3. 自动获取输出的 `positive_prompt`, `negative_prompt` 和 `checkpoint_name`。
+#### ⭐ Loading Latent Files (Recommended)
+1. Add the `Load Latent (Advanced)` node from the menu (under the `ComfyUI-Only/Latent` category).
+2. Click the `Upload Latent` button to select a `.latent` file from your computer.
+3. Alternatively, drag and drop the `.latent` file directly onto the node.
+4. The node will automatically handle the upload, parsing, and formatting, then connect the `LATENT` output to the next node (e.g., `VAEDecode`).
 
-## 📁 项目结构
+#### Parsing Workflows from Images
+1. Add the `WorkflowImageFileLoader` node (under the `ComfyUI-Only/Image` category).
+2. Select the image file you want to parse from the `image_file` dropdown menu.
+3. The `positive_prompt`, `negative_prompt`, and `checkpoint_name` will be automatically extracted.
 
+## 📁 Project Structure
 ```
 .
-├── __init__.py           <-- 主入口，注册节点和JS扩展
+├── __init__.py           <-- Main entry point, registers nodes and JS extensions
 ├── js/
-│   └── latent_loader.js  <-- 高级Latent加载器的前端UI逻辑
+│   └── latent_loader.js  <-- Frontend UI logic for the advanced latent loader
 ├── nodes/
 │   ├── image_processing_nodes.py
 │   └── latent_nodes.py
 ├── LICENSE
-├── README.md
-└── requirements.txt      <-- 项目依赖
+└── README.md
 ```
 
-## ⚙️ 依赖要求
-
+## ⚙️ Requirements
 - Python 3.8+
 - ComfyUI
 - PyTorch
-- **safetensors** (新)
+- **safetensors** (Core dependency, typically installed with ComfyUI)
 
-## 📝 更新日志
+## 📝 Changelog
 
-### v2.0.0 - 高级加载器版本 (开发代号：Phoenix)
-- 🔥 **全新**：发布 `Load Latent (Advanced)` 节点，支持从任意位置上传和拖拽 latent 文件。
-- ✨ **新增**：为新节点编写了独立的前端JS扩展，实现了原生级别的UI体验。
-- 🤖 **增强**：加载器后端实现智能格式兼容（pickle/safetensors）、智能结构解析和智能维度处理。
-- 🧹 **重构**：项目结构调整，增加了 `js` 目录和 `requirements.txt`。
-- 📚 **文档**：全面重写 `README.md`，聚焦新功能，简化旧说明。
+### v2.1.0 - Integration & Simplification (Codename: Orion)
+- 🎉 **Integration**: The project has been successfully added to the official **ComfyUI Manager** list for one-click installation.
+- 🚀 **Simplification**: **Highly recommended** to install via ComfyUI Manager for a streamlined user experience.
+- 🧹 **Refactor**: Removed `requirements.txt`. Dependencies are now managed by ComfyUI or the user as needed, making the project more lightweight.
+- 📚 **Documentation**: Completely rewrote `README.md` with updated installation instructions, project structure, and dependency information for clarity and accuracy.
+
+### v2.0.0 - Advanced Loader Edition (Codename: Phoenix)
+- 🔥 **New**: Released the `Load Latent (Advanced)` node with support for uploading and dragging-and-dropping latent files from any location.
+- ✨ **Added**: Developed a standalone frontend JS extension for the new node, providing a native-level UI experience.
+- 🤖 **Enhanced**: The loader backend now intelligently handles format compatibility (pickle/safetensors), structure parsing, and dimension processing.
+- 🧹 **Refactor**: Restructured the project, adding a `js` directory and `requirements.txt`.
+- 📚 **Documentation**: Overhauled `README.md` to focus on new features and simplify older descriptions.
 
 ### v1.2.0
-- ✅ 新增：CheckpointLoaderSimple节点的模型名称提取
-- ✅ 所有节点新增checkpoint_name输出
+- ✅ Added: Checkpoint model name extraction from CheckpointLoaderSimple nodes.
+- ✅ All nodes now have a `checkpoint_name` output.
 
-*（更早的日志已省略）*
+*(Older logs have been omitted.)*
 
-## 🤝 贡献
+## 🤝 Contributing
 
-欢迎提交Issue和Pull Request！
+Issues and Pull Requests are welcome!
 
-## 📄 许可证
+## 📄 License
 
-MIT License - 详见 [LICENSE](LICENSE) 文件
+MIT License - See the [LICENSE](LICENSE) file for details.
