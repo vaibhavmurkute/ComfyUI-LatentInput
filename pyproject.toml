@@ -1,73 +1,16 @@
-# 项目构建配置
-# 用于将此包作为独立库发布 
-
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "comfyui-only"
-version = "1.0.0"
-description = "ComfyUI自定义节点集合，提供图像处理、文本工具和模型包装功能"
-readme = "README.md"
-license = {text = "MIT"}
-authors = [
-    {name = "ComfyUI-Only Contributors"}
-]
-maintainers = [
-    {name = "ComfyUI-Only Contributors"}
-]
-keywords = ["comfyui", "stable-diffusion", "ai", "image-processing", "nodes"]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Topic :: Multimedia :: Graphics",
-]
-requires-python = ">=3.8"
-dependencies = [
-    "torch>=1.13.0",
-    "torchvision>=0.14.0",
-    "numpy>=1.21.0",
-    "pillow>=9.0.0",
-    "opencv-python>=4.5.0",
-    "tqdm>=4.64.0",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0",
-    "black>=22.0",
-    "flake8>=5.0",
-    "mypy>=0.991",
-]
-full = [
-    "transformers>=4.20.0",
-    "diffusers>=0.10.0",
-    "accelerate>=0.15.0",
-]
+version = "2.1.1"
+description = "A collection of custom nodes for ComfyUI, providing advanced file loading and workflow parsing features."
 
 [project.urls]
-Homepage = "https://github.com/your-username/ComfyUI-Only"
-Repository = "https://github.com/your-username/ComfyUI-Only"
-Issues = "https://github.com/your-username/ComfyUI-Only/issues"
+Repository = "https://github.com/eric183/ComfyUI-Only"
+#  Issues = "https://github.com/your-username/ComfyUI-Only/issues"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["nodes*", "utils*", "assets*"]
-
-[tool.black]
-line-length = 88
-target-version = ['py38']
-
-[tool.mypy]
-python_version = "3.8"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true 
+[tool.comfyui]
+custom_nodes = "ComfyUI-Only"
+i18n = "ComfyUI-Only" 
