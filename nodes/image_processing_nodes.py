@@ -271,77 +271,6 @@ class WorkflowImageFileLoader:
         return None
     
 
-class WorkflowImageLoader:
-    """
-    图片加载节点，支持读取图片的workflow信息并解析提示词
-    """
-    
-    def __init__(self):
-        self.parser = WorkflowParser()
-    
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "image": ("IMAGE",),
-            },
-            "optional": {
-                "workflow_json": ("STRING", {
-                    "multiline": True,
-                    "default": "",
-                    "placeholder": "Manual workflow JSON is required as the IMAGE type does not contain original metadata."
-                }),
-            }
-        }
-    
-    RETURN_TYPES = ("IMAGE", "STRING", "STRING", "STRING", "STRING", "STRING")
-    RETURN_NAMES = ("image", "positive_prompt", "filtered_positive_prompt", "negative_prompt", "checkpoint_name", "workflow_info")
-    FUNCTION = "load_and_parse"
-    CATEGORY = "only/Image"
-    
-    def load_and_parse(self, image, workflow_json=""):
-        """
-        加载图片并解析workflow信息
-        注意：IMAGE类型不包含原始图片的元数据，需要手动输入workflow JSON
-        """
-        # 输出图片（直接传递）
-        output_image = image
-        
-        # 初始化输出
-        positive_prompt = ""
-        negative_prompt = ""
-        checkpoint_name = ""
-        workflow_info = "注意：IMAGE类型不包含图片元数据，请使用WorkflowImageFileLoader或手动输入JSON"
-        filtered_positive_prompt = ""
-        
-        try:
-            workflow_data = None
-            
-            # 如果手动提供了workflow JSON，优先使用
-            if workflow_json.strip():
-                try:
-                    workflow_data = json.loads(workflow_json)
-                    workflow_info = "使用手动输入的workflow"
-                except json.JSONDecodeError as e:
-                    workflow_info = f"手动输入的JSON格式错误: {str(e)}"
-            else:
-                workflow_info = "请输入workflow JSON或使用WorkflowImageFileLoader节点"
-                return (output_image, positive_prompt, filtered_positive_prompt, negative_prompt, checkpoint_name, workflow_info)
-            
-            # 解析workflow数据
-            if workflow_data:
-                positive_prompt, filtered_positive_prompt, negative_prompt, checkpoint_name = self.parser.parse_workflow_data(workflow_data)
-                if positive_prompt or negative_prompt or checkpoint_name:
-                    workflow_info = f"成功解析 - Positive: {len(positive_prompt)}字符, Negative: {len(negative_prompt)}字符, Checkpoint: {checkpoint_name}"
-                else:
-                    workflow_info = "未找到相关节点信息"
-            
-        except Exception as e:
-            workflow_info = f"解析错误: {str(e)}"
-        
-        return (output_image, positive_prompt, filtered_positive_prompt, negative_prompt, checkpoint_name, workflow_info)
-    
-
 class WorkflowJSONParser:
     """
     独立的Workflow JSON解析器节点
@@ -413,12 +342,10 @@ class WorkflowJSONParser:
 # 导出节点类
 NODE_CLASS_MAPPINGS = {
     "WorkflowImageFileLoader": WorkflowImageFileLoader,
-    "WorkflowImageLoader": WorkflowImageLoader,
     "WorkflowJSONParser": WorkflowJSONParser,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "WorkflowImageFileLoader": "Workflow Image Loader (File)",
-    "WorkflowImageLoader": "Workflow Image Loader (Image)",
     "WorkflowJSONParser": "Workflow JSON Parser",
 } 
