@@ -45,8 +45,8 @@ class WorkflowImageFileLoader:
             }
         }
     
-    RETURN_TYPES = ("IMAGE", "STRING", "STRING", "STRING", "STRING")
-    RETURN_NAMES = ("image", "positive_prompt", "negative_prompt", "checkpoint_name", "workflow_info")
+    RETURN_TYPES = ("IMAGE", "STRING", "STRING", "STRING", "STRING", "STRING")
+    RETURN_NAMES = ("image", "positive_prompt", "negative_prompt", "checkpoint_name", "workflow_info", "workflow_json_out")
     FUNCTION = "load_and_parse"
     CATEGORY = "only/Image"
     
@@ -74,31 +74,37 @@ class WorkflowImageFileLoader:
         except Exception as e:
             # 如果图片加载失败，创建一个黑色图片
             output_image = torch.zeros(1, 512, 512, 3)
-            return (output_image, "", "", "", f"图片加载失败: {str(e)}")
+            return (output_image, "", "", "", f"图片加载失败: {str(e)}", "")
         
         # 初始化输出
         positive_prompt = ""
         negative_prompt = ""
         checkpoint_name = ""
         workflow_info = "无workflow信息"
+        raw_workflow_text = ""
         
         try:
             workflow_data = None
             
             # 如果手动提供了workflow JSON，优先使用
             if workflow_json.strip():
-                try:
-                    workflow_data = json.loads(workflow_json)
-                    workflow_info = "使用手动输入的workflow"
-                except json.JSONDecodeError as e:
-                    workflow_info = f"手动输入的JSON格式错误: {str(e)}"
+                raw_workflow_text = workflow_json
+                workflow_info = "使用手动输入的workflow"
             else:
-                # 尝试从图片中提取workflow信息
-                workflow_data = self.extract_workflow_from_image(image_path)
-                if workflow_data:
+                # 否则，尝试从图片中提取
+                raw_workflow_text = self.extract_workflow_from_image(image_path)
+                if raw_workflow_text:
                     workflow_info = "从图片中提取的workflow"
                 else:
                     workflow_info = "图片中未找到workflow信息"
+            
+            # 如果获取到了任何形式的workflow文本，尝试解析
+            if raw_workflow_text:
+                try:
+                    workflow_data = json.loads(raw_workflow_text)
+                except json.JSONDecodeError as e:
+                    workflow_info += f" - JSON格式错误: {str(e)}"
+                    workflow_data = None #确保数据无效
             
             # 解析workflow数据
             if workflow_data:
@@ -111,11 +117,11 @@ class WorkflowImageFileLoader:
         except Exception as e:
             workflow_info = f"解析错误: {str(e)}"
         
-        return (output_image, positive_prompt, negative_prompt, checkpoint_name, workflow_info)
+        return (output_image, positive_prompt, negative_prompt, checkpoint_name, workflow_info, raw_workflow_text)
     
     def extract_workflow_from_image(self, image_path):
         """
-        从图片文件中提取workflow信息
+        从图片文件中提取原始的workflow JSON字符串
         """
         try:
             with Image.open(image_path) as img:
@@ -125,22 +131,25 @@ class WorkflowImageFileLoader:
                     workflow_keys = ['workflow', 'Workflow', 'ComfyUI_workflow', 'prompt', 'parameters']
                     for key in workflow_keys:
                         if key in img.text:
+                            workflow_text = img.text[key]
                             try:
-                                workflow_text = img.text[key]
-                                # 尝试解析JSON
-                                return json.loads(workflow_text)
+                                # 验证它是否是有效的JSON，但返回原始字符串
+                                json.loads(workflow_text)
+                                return workflow_text
                             except json.JSONDecodeError:
-                                # 如果不是JSON，可能是其他格式，继续尝试
                                 continue
                 
                 # 检查PNG info参数
                 if hasattr(img, 'info') and img.info:
                     for key, value in img.info.items():
                         if 'workflow' in key.lower() or 'comfy' in key.lower():
-                            try:
-                                return json.loads(value)
-                            except (json.JSONDecodeError, TypeError):
-                                continue
+                            if isinstance(value, str):
+                                try:
+                                    # 验证它是否是有效的JSON，但返回原始字符串
+                                    json.loads(value)
+                                    return value
+                                except (json.JSONDecodeError, TypeError):
+                                    continue
                 
                 # 检查EXIF数据（主要用于JPEG）
                 if hasattr(img, '_getexif') and img._getexif():
@@ -149,7 +158,9 @@ class WorkflowImageFileLoader:
                         tag = TAGS.get(tag_id, tag_id)
                         if isinstance(value, str) and ('workflow' in value.lower() or 'comfy' in value.lower()):
                             try:
-                                return json.loads(value)
+                                # 验证它是否是有效的JSON，但返回原始字符串
+                                json.loads(value)
+                                return value
                             except (json.JSONDecodeError, TypeError):
                                 continue
         
@@ -160,7 +171,7 @@ class WorkflowImageFileLoader:
     
     def parse_workflow_data(self, workflow_data):
         """
-        解析workflow JSON，提取alekpet节点的提示词和检查点名称
+        解析workflow JSON，提取提示词和检查点名称
         """
         positive_prompt = ""
         negative_prompt = ""
@@ -170,26 +181,55 @@ class WorkflowImageFileLoader:
             # 查找nodes数组
             nodes = workflow_data.get("nodes", [])
             
-            # 寻找cnr_id为comfyui_custom_nodes_alekpet的节点
-            alekpet_nodes = []
+            # 寻找提示词节点 (兼容 CLIPTextEncode 和 alekpet)
+            prompt_texts = []
             for node in nodes:
+                node_type = node.get("type")
                 properties = node.get("properties", {})
-                cnr_id = properties.get("cnr_id", "")
+
+                # 检查是否为有效的文本节点
+                is_text_node = False
+                if node_type == "CLIPTextEncode":
+                    is_text_node = True
+                elif properties.get("cnr_id") == "comfyui_custom_nodes_alekpet":
+                    is_text_node = True
                 
-                if cnr_id == "comfyui_custom_nodes_alekpet":
-                    widgets_values = node.get("widgets_values", [])
-                    if widgets_values and len(widgets_values) > 0:
-                        text_content = widgets_values[0]
-                        alekpet_nodes.append(text_content)
-            
-            # 根据内容判断positive和negative
-            for text_content in alekpet_nodes:
-                if self.is_negative_prompt(text_content):
-                    if not negative_prompt:  # 只取第一个negative
-                        negative_prompt = text_content
+                if is_text_node:
+                    widgets_values = node.get("widgets_values")
+                    if widgets_values and isinstance(widgets_values, list) and len(widgets_values) > 0:
+                        prompt_texts.append(str(widgets_values[0]))
+
+            # 1. 将所有提示词分类
+            marked_positives, unmarked_positives = [], []
+            marked_negatives, unmarked_negatives = [], []
+
+            for p in prompt_texts:
+                is_neg = self.is_negative_prompt(p)
+                if '###PROMPT_START###' in p and '###PROMPT_END###' in p:
+                    if is_neg:
+                        marked_negatives.append(p)
+                    else:
+                        marked_positives.append(p)
                 else:
-                    if not positive_prompt:  # 只取第一个positive
-                        positive_prompt = text_content
+                    if is_neg:
+                        unmarked_negatives.append(p)
+                    else:
+                        unmarked_positives.append(p)
+
+            # 2. 根据标记优先原则，独立处理正向和负向提示词
+            def process_prompts(marked_list, unmarked_list):
+                target_list = marked_list if marked_list else unmarked_list
+                processed = []
+                for p in target_list:
+                    match = re.search(r'###PROMPT_START###(.*)###PROMPT_END###', p, re.DOTALL)
+                    if match:
+                        processed.append(match.group(1).strip())
+                    else:
+                        processed.append(p)
+                return ", ".join(processed)
+
+            positive_prompt = process_prompts(marked_positives, unmarked_positives)
+            negative_prompt = process_prompts(marked_negatives, unmarked_negatives)
             
             # 寻找CheckpointLoaderSimple节点
             for node in nodes:
@@ -314,7 +354,7 @@ class WorkflowImageLoader:
     
     def parse_workflow_data(self, workflow_data):
         """
-        解析workflow JSON，提取alekpet节点的提示词和检查点名称
+        解析workflow JSON，提取提示词和检查点名称
         """
         positive_prompt = ""
         negative_prompt = ""
@@ -324,26 +364,55 @@ class WorkflowImageLoader:
             # 查找nodes数组
             nodes = workflow_data.get("nodes", [])
             
-            # 寻找cnr_id为comfyui_custom_nodes_alekpet的节点
-            alekpet_nodes = []
+            # 寻找提示词节点 (兼容 CLIPTextEncode 和 alekpet)
+            prompt_texts = []
             for node in nodes:
+                node_type = node.get("type")
                 properties = node.get("properties", {})
-                cnr_id = properties.get("cnr_id", "")
+
+                # 检查是否为有效的文本节点
+                is_text_node = False
+                if node_type == "CLIPTextEncode":
+                    is_text_node = True
+                elif properties.get("cnr_id") == "comfyui_custom_nodes_alekpet":
+                    is_text_node = True
                 
-                if cnr_id == "comfyui_custom_nodes_alekpet":
-                    widgets_values = node.get("widgets_values", [])
-                    if widgets_values and len(widgets_values) > 0:
-                        text_content = widgets_values[0]
-                        alekpet_nodes.append(text_content)
+                if is_text_node:
+                    widgets_values = node.get("widgets_values")
+                    if widgets_values and isinstance(widgets_values, list) and len(widgets_values) > 0:
+                        prompt_texts.append(str(widgets_values[0]))
             
-            # 根据内容判断positive和negative
-            for text_content in alekpet_nodes:
-                if self.is_negative_prompt(text_content):
-                    if not negative_prompt:  # 只取第一个negative
-                        negative_prompt = text_content
+            # 1. 将所有提示词分类
+            marked_positives, unmarked_positives = [], []
+            marked_negatives, unmarked_negatives = [], []
+
+            for p in prompt_texts:
+                is_neg = self.is_negative_prompt(p)
+                if '###PROMPT_START###' in p and '###PROMPT_END###' in p:
+                    if is_neg:
+                        marked_negatives.append(p)
+                    else:
+                        marked_positives.append(p)
                 else:
-                    if not positive_prompt:  # 只取第一个positive
-                        positive_prompt = text_content
+                    if is_neg:
+                        unmarked_negatives.append(p)
+                    else:
+                        unmarked_positives.append(p)
+
+            # 2. 根据标记优先原则，独立处理正向和负向提示词
+            def process_prompts(marked_list, unmarked_list):
+                target_list = marked_list if marked_list else unmarked_list
+                processed = []
+                for p in target_list:
+                    match = re.search(r'###PROMPT_START###(.*)###PROMPT_END###', p, re.DOTALL)
+                    if match:
+                        processed.append(match.group(1).strip())
+                    else:
+                        processed.append(p)
+                return ", ".join(processed)
+
+            positive_prompt = process_prompts(marked_positives, unmarked_positives)
+            negative_prompt = process_prompts(marked_negatives, unmarked_negatives)
             
             # 寻找CheckpointLoaderSimple节点
             for node in nodes:
@@ -439,20 +508,25 @@ class WorkflowJSONParser:
             # 查找nodes数组
             nodes = workflow_data.get("nodes", [])
             
-            # 寻找cnr_id为comfyui_custom_nodes_alekpet的节点
-            alekpet_nodes = []
+            # 寻找提示词节点 (兼容 CLIPTextEncode 和 alekpet)
+            prompt_nodes_info = []
             for node in nodes:
+                node_type = node.get("type")
                 properties = node.get("properties", {})
-                cnr_id = properties.get("cnr_id", "")
-                
-                if cnr_id == "comfyui_custom_nodes_alekpet":
-                    widgets_values = node.get("widgets_values", [])
-                    if widgets_values and len(widgets_values) > 0:
-                        text_content = widgets_values[0]
-                        node_type = node.get("type", "Unknown")
-                        alekpet_nodes.append({
+
+                is_text_node = False
+                if node_type == "CLIPTextEncode":
+                    is_text_node = True
+                elif properties.get("cnr_id") == "comfyui_custom_nodes_alekpet":
+                    is_text_node = True
+
+                if is_text_node:
+                    widgets_values = node.get("widgets_values")
+                    if widgets_values and isinstance(widgets_values, list) and len(widgets_values) > 0:
+                        text_content = str(widgets_values[0])
+                        prompt_nodes_info.append({
                             "content": text_content,
-                            "type": node_type,
+                            "type": node_type or "alekpet_node", 
                             "id": node.get("id", "unknown")
                         })
             
@@ -472,31 +546,47 @@ class WorkflowJSONParser:
                         })
                         break  # 找到第一个就停止
             
-            # 根据内容判断positive和negative
-            found_positive = False
-            found_negative = False
-            
-            for node_info in alekpet_nodes:
-                text_content = node_info["content"]
-                
-                if self.is_negative_prompt(text_content) and not found_negative:
-                    negative_prompt = text_content
-                    found_negative = True
-                elif not self.is_negative_prompt(text_content) and not found_positive:
-                    positive_prompt = text_content
-                    found_positive = True
-                
-                if found_positive and found_negative:
-                    break
+            # 1. 将所有提示词分类
+            marked_positives, unmarked_positives = [], []
+            marked_negatives, unmarked_negatives = [], []
+
+            for node_info in prompt_nodes_info:
+                p = node_info["content"]
+                is_neg = self.is_negative_prompt(p)
+                if '###PROMPT_START###' in p and '###PROMPT_END###' in p:
+                    if is_neg:
+                        marked_negatives.append(p)
+                    else:
+                        marked_positives.append(p)
+                else:
+                    if is_neg:
+                        unmarked_negatives.append(p)
+                    else:
+                        unmarked_positives.append(p)
+
+            # 2. 根据标记优先原则，独立处理正向和负向提示词
+            def process_prompts(marked_list, unmarked_list):
+                target_list = marked_list if marked_list else unmarked_list
+                processed = []
+                for p in target_list:
+                    match = re.search(r'###PROMPT_START###(.*)###PROMPT_END###', p, re.DOTALL)
+                    if match:
+                        processed.append(match.group(1).strip())
+                    else:
+                        processed.append(p)
+                return ", ".join(processed)
+
+            positive_prompt = process_prompts(marked_positives, unmarked_positives)
+            negative_prompt = process_prompts(marked_negatives, unmarked_negatives)
             
             # 生成解析信息
-            alekpet_count = len(alekpet_nodes)
+            prompt_count = len(prompt_nodes_info)
             checkpoint_count = len(checkpoint_nodes)
             
-            parse_info = f"找到 {alekpet_count} 个 alekpet 节点, {checkpoint_count} 个 checkpoint 节点。"
-            if found_positive:
+            parse_info = f"找到 {prompt_count} 个提示词节点, {checkpoint_count} 个 checkpoint 节点。"
+            if positive_prompt:
                 parse_info += f" Positive: {len(positive_prompt)} 字符。"
-            if found_negative:
+            if negative_prompt:
                 parse_info += f" Negative: {len(negative_prompt)} 字符。"
             if checkpoint_name:
                 parse_info += f" Checkpoint: {checkpoint_name}。"
