@@ -48,7 +48,7 @@ class WorkflowImageFileLoader:
     RETURN_TYPES = ("IMAGE", "STRING", "STRING", "STRING", "STRING")
     RETURN_NAMES = ("image", "positive_prompt", "negative_prompt", "checkpoint_name", "workflow_info")
     FUNCTION = "load_and_parse"
-    CATEGORY = "ComfyUI-Only/Image"
+    CATEGORY = "only/Image"
     
     def load_and_parse(self, image_file, workflow_json=""):
         """
@@ -269,7 +269,7 @@ class WorkflowImageLoader:
     RETURN_TYPES = ("IMAGE", "STRING", "STRING", "STRING", "STRING")
     RETURN_NAMES = ("image", "positive_prompt", "negative_prompt", "checkpoint_name", "workflow_info")
     FUNCTION = "load_and_parse"
-    CATEGORY = "ComfyUI-Only/Image"
+    CATEGORY = "only/Image"
     
     def load_and_parse(self, image, workflow_json=""):
         """
@@ -417,7 +417,7 @@ class WorkflowJSONParser:
     RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING")
     RETURN_NAMES = ("positive_prompt", "negative_prompt", "checkpoint_name", "parse_info")
     FUNCTION = "parse_workflow"
-    CATEGORY = "ComfyUI-Only/Text"
+    CATEGORY = "only/Text"
     
     def parse_workflow(self, workflow_json):
         """
@@ -552,7 +552,7 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "WorkflowImageFileLoader": "Workflow Image Loader (File)",
-    "WorkflowImageLoader": "Workflow Image Loader (Image)",
-    "WorkflowJSONParser": "Workflow JSON Parser",
+    "WorkflowImageFileLoader": "only/Workflow Image Loader (File)",
+    "WorkflowImageLoader": "only/Workflow Image Loader (Image)",
+    "WorkflowJSONParser": "only/Workflow JSON Parser",
 } 

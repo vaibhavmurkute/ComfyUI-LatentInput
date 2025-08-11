@@ -19,7 +19,7 @@ class LatentLoaderAdvanced:
 
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "load_latent"
-    CATEGORY = "ComfyUI-Only/Latent"
+    CATEGORY = "only/Latent"
     
     def load_latent(self, latent_file):
         if latent_file.startswith("temp/"):
@@ -81,5 +81,5 @@ NODE_CLASS_MAPPINGS = {
 
 # 节点显示名称映射
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LatentLoaderAdvanced": "Load Latent (Advanced)",
+    "LatentLoaderAdvanced": "only/Load Latent (Advanced)",
 }
