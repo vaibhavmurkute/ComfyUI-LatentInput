@@ -63,54 +63,34 @@ class WorkflowParser:
         checkpoint_name = ""
         
         try:
-            # 1. 查找所有以 ###PROMPT_START### 开头的字符串
-            def find_strings_starting_with(data, prefix):
-                found = []
-                if isinstance(data, dict):
-                    for key, value in data.items():
-                        found.extend(find_strings_starting_with(value, prefix))
-                elif isinstance(data, list):
-                    for item in data:
-                        found.extend(find_strings_starting_with(item, prefix))
-                elif isinstance(data, str) and data.strip().startswith(prefix):
-                    found.append(data)
-                return found
-
-            marked_prompts = find_strings_starting_with(workflow_data, '###PROMPT_START###')
-            
-            # 2. 提取最长的作为原始 positive_prompt
-            if marked_prompts:
-                longest_prompt_str = max(marked_prompts, key=len)
-                match = re.search(r'###PROMPT_START###(.*)###PROMPT_END###', longest_prompt_str, re.DOTALL)
-                if match:
-                    positive_prompt = match.group(1).strip()
-
-            # 3. 提取过滤后的 "filtered_positive_prompt"
-            filtered_prompts_list = [p for p in marked_prompts if '<lora:' not in p and '__' not in p]
-            if filtered_prompts_list:
-                longest_filtered_prompt_str = max(filtered_prompts_list, key=len)
-                match = re.search(r'###PROMPT_START###(.*)###PROMPT_END###', longest_filtered_prompt_str, re.DOTALL)
-                if match:
-                    filtered_positive_prompt = match.group(1).strip()
-
-            # 4. 改进Negative Prompt提取逻辑
             nodes = workflow_data.get("nodes", [])
+
+            # 1. 新逻辑: 根据节点标题 "title" 查找正向提示词
+            for node in nodes:
+                title = node.get("title")
+                widgets_values = node.get("widgets_values")
+
+                if widgets_values and isinstance(widgets_values, list) and len(widgets_values) > 1 and isinstance(widgets_values[1], str):
+                    if title == "positive_prompt":
+                        positive_prompt = widgets_values[1].strip()
+                    elif title == "filtered_positive_prompt":
+                        filtered_positive_prompt = widgets_values[1].strip()
+
+            # 2. 负向提示词提取逻辑 (基本不变)
             negative_prompts_list = []
             for node in nodes:
-                # 负向提示词通常也在标准的CLIPTextEncode节点中
-                if node.get("type") == "CLIPTextEncode":
+                # 负向提示词通常在没有特殊标题的 CLIPTextEncode 节点中
+                if node.get("type") == "CLIPTextEncode" and not node.get("title"):
                     widgets_values = node.get("widgets_values")
                     if widgets_values and isinstance(widgets_values, list) and len(widgets_values) > 0:
                         text_content = str(widgets_values[0])
-                        # 确保它不是一个被标记的正面提示词，并且符合负面提示词的特征
-                        if not text_content.strip().startswith('###PROMPT_START###') and self.is_negative_prompt(text_content):
+                        if self.is_negative_prompt(text_content):
                             negative_prompts_list.append(text_content.strip())
             
             if negative_prompts_list:
-                # 去重并合并
                 negative_prompt = ", ".join(list(dict.fromkeys(negative_prompts_list)))
 
-            # 5. 寻找CheckpointLoaderSimple节点 (逻辑不变)
+            # 3. 寻找CheckpointLoaderSimple节点 (逻辑不变)
             for node in nodes:
                 # 优先使用更通用的 'type' 属性判断
                 if node.get("type") == "CheckpointLoaderSimple":
