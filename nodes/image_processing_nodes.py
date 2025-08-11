@@ -552,7 +552,7 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "WorkflowImageFileLoader": "only/Workflow Image Loader (File)",
-    "WorkflowImageLoader": "only/Workflow Image Loader (Image)",
-    "WorkflowJSONParser": "only/Workflow JSON Parser",
+    "WorkflowImageFileLoader": "Workflow Image Loader (File)",
+    "WorkflowImageLoader": "Workflow Image Loader (Image)",
+    "WorkflowJSONParser": "Workflow JSON Parser",
 } 

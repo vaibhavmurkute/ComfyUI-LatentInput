@@ -81,5 +81,5 @@ NODE_CLASS_MAPPINGS = {
 
 # 节点显示名称映射
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LatentLoaderAdvanced": "only/Load Latent (Advanced)",
+    "LatentLoaderAdvanced": "Load Latent (Advanced)",
 }
