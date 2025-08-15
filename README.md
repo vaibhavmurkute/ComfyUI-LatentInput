@@ -45,11 +45,7 @@ A collection of custom nodes for ComfyUI, initially focused on workflow parsing,
     ```bash
     git clone https://github.com/eric183/ComfyUI-Only.git
     ```
-3.  **Check Dependencies**: Ensure that the `safetensors` library is installed in your Python environment. ComfyUI usually includes it, but if you encounter import errors, install it manually:
-    ```bash
-    pip install safetensors
-    ```
-4.  **Restart ComfyUI**: Restart ComfyUI to load the new nodes.
+3.  **Restart ComfyUI**: Restart ComfyUI to load the new nodes.
 
 ## 📖 How to Use
 
@@ -81,8 +77,6 @@ A collection of custom nodes for ComfyUI, initially focused on workflow parsing,
 - Python 3.8+
 - ComfyUI
 - PyTorch
-- **safetensors** (Core dependency, typically installed with ComfyUI)
-
 ## 📝 Changelog
 
 ### v2.1.0 - Integration & Simplification (Codename: Orion)
