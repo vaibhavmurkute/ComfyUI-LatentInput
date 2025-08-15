@@ -9,7 +9,6 @@ A collection of custom nodes for ComfyUI, initially focused on workflow parsing,
 ### 1. Load Latent (Advanced) ⭐ Core Feature
 - 📤 **Upload from Anywhere**: Select `.latent` files from anywhere on your computer using the "Upload Latent" button, eliminating the need to place them in the `input` folder.
 - ✨ **Drag and Drop**: Upload `.latent` files by simply dragging them from your file manager onto the node.
-- 🔄 **Smart Format Compatibility**: Automatically detects and supports both standard `pickle` and high-speed `safetensors` formats.
 - 🤖 **Intelligent Structure Parsing**: Automatically parses various internal latent structures, whether it's the standard `samples` key, the non-standard `latent_tensor` key, or even a raw tensor.
 - 🔢 **Smart Dimension Handling**: Automatically processes 3D (image), 4D (batched images), and 5D (video) latent tensors to ensure compatibility with downstream nodes like VAEDecode.
 
@@ -88,7 +87,6 @@ A collection of custom nodes for ComfyUI, initially focused on workflow parsing,
 ### v2.0.0 - Advanced Loader Edition (Codename: Phoenix)
 - 🔥 **New**: Released the `Load Latent (Advanced)` node with support for uploading and dragging-and-dropping latent files from any location.
 - ✨ **Added**: Developed a standalone frontend JS extension for the new node, providing a native-level UI experience.
-- 🤖 **Enhanced**: The loader backend now intelligently handles format compatibility (pickle/safetensors), structure parsing, and dimension processing.
 - 🧹 **Refactor**: Restructured the project, adding a `js` directory and `requirements.txt`.
 - 📚 **Documentation**: Overhauled `README.md` to focus on new features and simplify older descriptions.
 
