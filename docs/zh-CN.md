@@ -9,7 +9,6 @@ ComfyUI自定义节点集合，最初专注于workflow解析，现已扩展至�
 ### 1. 高级Latent加载器 (Load Latent (Advanced)) ⭐核心功能
 - 📤 **从任意位置上传**：通过“Upload Latent”按钮，直接从您电脑的任何地方选择 `.latent` 文件，无需再放入 `input` 文件夹。
 - ✨ **拖拽上传**：将 `.latent` 文件直接从您的文件管理器拖拽到节点上即可上传。
-- 🔄 **智能格式兼容**：自动识别并兼容标准的 `pickle` 格式和高速的 `safetensors` 格式。
 - 🤖 **智能结构解析**：自动解析多种 latent 内部结构，无论是标准的 `samples` 键，还是非标准的 `latent_tensor` 键，甚至是裸张量。
 - 🔢 **智能维度处理**：自动处理3D（图像）、4D（带批次的图像）和5D（视频）的 latent 张量，确保与下游节点（如VAEDecode）的兼容性。
 
@@ -45,11 +44,7 @@ ComfyUI自定义节点集合，最初专注于workflow解析，现已扩展至�
     ```bash
     git clone https://github.com/eric183/ComfyUI-Only.git
     ```
-3.  **检查依赖**：确保您的Python环境中已安装 `safetensors` 库。ComfyUI 通常已自带，但若遇到导入错误，请手动安装：
-    ```bash
-    pip install safetensors
-    ```
-4.  **重启 ComfyUI**：重启 ComfyUI 以加载新节点。
+3.  **重启 ComfyUI**：重启 ComfyUI 以加载新节点。
 
 ## 📖 使用方法
 
@@ -81,8 +76,6 @@ ComfyUI自定义节点集合，最初专注于workflow解析，现已扩展至�
 - Python 3.8+
 - ComfyUI
 - PyTorch
-- **safetensors** (核心依赖，通常随ComfyUI自动安装)
-
 ## 📝 更新日志
 
 ### v2.1.0 - 集成与简化 (开发代号：Orion)
@@ -94,7 +87,6 @@ ComfyUI自定义节点集合，最初专注于workflow解析，现已扩展至�
 ### v2.0.0 - 高级加载器版本 (开发代号：Phoenix)
 - 🔥 **全新**：发布 `Load Latent (Advanced)` 节点，支持从任意位置上传和拖拽 latent 文件。
 - ✨ **新增**：为新节点编写了独立的前端JS扩展，实现了原生级别的UI体验。
-- 🤖 **增强**：加载器后端实现智能格式兼容（pickle/safetensors）、智能结构解析和智能维度处理。
 - 🧹 **重构**：项目结构调整，增加了 `js` 目录和 `requirements.txt`。
 - 📚 **文档**：全面重写 `README.md`，聚焦新功能，简化旧说明。
 
