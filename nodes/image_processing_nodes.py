@@ -69,12 +69,28 @@ class WorkflowParser:
             for node in nodes:
                 title = node.get("title")
                 widgets_values = node.get("widgets_values")
+                properties = node.get("properties")
 
-                if widgets_values and isinstance(widgets_values, list) and len(widgets_values) > 1 and isinstance(widgets_values[1], str):
-                    if title == "positive_prompt":
-                        positive_prompt = widgets_values[1].strip()
-                    elif title == "filtered_positive_prompt":
-                        filtered_positive_prompt = widgets_values[1].strip()
+                # 检查是否为 alekpet 节点
+                is_alekpet_node = False
+                if properties and isinstance(properties, dict):
+                    if properties.get("cnr_id") == "rgthree-comfy":
+                        is_alekpet_node = True
+
+                if is_alekpet_node:
+                    # alekpet 节点从 widgets_values[0] 获取提示词
+                    if widgets_values and isinstance(widgets_values, list) and len(widgets_values) > 0 and isinstance(widgets_values[0], str):
+                        if title == "positive_prompt":
+                            positive_prompt = widgets_values[0].strip()
+                        elif title == "filtered_positive_prompt":
+                            filtered_positive_prompt = widgets_values[0].strip()
+                else:
+                    # 原有逻辑
+                    if widgets_values and isinstance(widgets_values, list) and len(widgets_values) > 1 and isinstance(widgets_values[1], str):
+                        if title == "positive_prompt":
+                            positive_prompt = widgets_values[1].strip()
+                        elif title == "filtered_positive_prompt":
+                            filtered_positive_prompt = widgets_values[1].strip()
 
             # 2. 负向提示词提取逻辑 (基本不变)
             negative_prompts_list = []
