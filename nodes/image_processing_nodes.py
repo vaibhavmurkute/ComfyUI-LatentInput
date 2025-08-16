@@ -78,7 +78,7 @@ class WorkflowParser:
                         is_alekpet_node = True
 
                 if is_alekpet_node:
-                    # alekpet 节点从 widgets_values[0] 获取提示词
+                    # rgthree-comfy 节点从 widgets_values[0] 获取提示词
                     if widgets_values and isinstance(widgets_values, list) and len(widgets_values) > 0 and isinstance(widgets_values[0], str):
                         if title == "positive_prompt":
                             positive_prompt = widgets_values[0].strip()
