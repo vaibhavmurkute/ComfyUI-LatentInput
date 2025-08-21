@@ -18,40 +18,40 @@ class WorkflowParser:
     """
     一个可重用的工作流解析器，用于提取提示词和模型信息。
     """
-    def is_negative_prompt(self, text):
-        """
-        判断文本是否为negative prompt
-        """
-        text_lower = text.lower()
+    # def is_negative_prompt(self, text):
+    #     """
+    #     判断文本是否为negative prompt
+    #     """
+    #     text_lower = text.lower()
         
-        # 首先检查明确的positive关键词
-        positive_keywords = ["masterpiece", "best quality", "best"]
-        for keyword in positive_keywords:
-            if keyword in text_lower:
-                return False  # 明确是positive
+    #     # 首先检查明确的positive关键词
+    #     positive_keywords = ["masterpiece", "best quality", "best"]
+    #     for keyword in positive_keywords:
+    #         if keyword in text_lower:
+    #             return False  # 明确是positive
         
-        # 然后检查明确的negative关键词
-        negative_keywords = ["worst", "bad"]
-        for keyword in negative_keywords:
-            if keyword in text_lower:
-                return True   # 明确是negative
+    #     # 然后检查明确的negative关键词
+    #     negative_keywords = ["worst", "bad"]
+    #     for keyword in negative_keywords:
+    #         if keyword in text_lower:
+    #             return True   # 明确是negative
         
-        # 如果没有明确关键词，使用其他特征判断
-        # 以lora标签开头通常是positive
-        if text.strip().startswith("<lora:"):
-            return False
+    #     # 如果没有明确关键词，使用其他特征判断
+    #     # 以lora标签开头通常是positive
+    #     if text.strip().startswith("<lora:"):
+    #         return False
         
-        # 包含更多negative特征词汇
-        extended_negative_keywords = [
-            "low quality", "normal quality", "bad anatomy", "bad hands", 
-            "watermark", "signature", "simple background", "transparent"
-        ]
-        for keyword in extended_negative_keywords:
-            if keyword in text_lower:
-                return True
+    #     # 包含更多negative特征词汇
+    #     extended_negative_keywords = [
+    #         "low quality", "normal quality", "bad anatomy", "bad hands", 
+    #         "watermark", "signature", "simple background", "transparent"
+    #     ]
+    #     for keyword in extended_negative_keywords:
+    #         if keyword in text_lower:
+    #             return True
         
-        # 默认判断为positive（保守策略）
-        return False
+    #     # 默认判断为positive（保守策略）
+    #     return False
 
     def parse_workflow_data(self, workflow_data):
         """
@@ -84,27 +84,54 @@ class WorkflowParser:
                             positive_prompt = widgets_values[0].strip()
                         elif title == "filtered_positive_prompt":
                             filtered_positive_prompt = widgets_values[0].strip()
+                        elif title == "negative_prompt":
+                            negative_prompt = widgets_values[0].strip()
                 else:
-                    # 原有逻辑
+                    # 原有逻辑，先尝试从 index 1 获取
                     if widgets_values and isinstance(widgets_values, list) and len(widgets_values) > 1 and isinstance(widgets_values[1], str):
                         if title == "positive_prompt":
                             positive_prompt = widgets_values[1].strip()
                         elif title == "filtered_positive_prompt":
                             filtered_positive_prompt = widgets_values[1].strip()
+                        elif title == "negative_prompt":
+                            negative_prompt = widgets_values[1].strip()
+                    # 兼容逻辑：如果 index 1 失败，再尝试从 index 0 获取
+                    elif widgets_values and isinstance(widgets_values, list) and len(widgets_values) > 0 and isinstance(widgets_values[0], str):
+                        if title == "positive_prompt":
+                            positive_prompt = widgets_values[0].strip()
+                        elif title == "filtered_positive_prompt":
+                            filtered_positive_prompt = widgets_values[0].strip()
+                        elif title == "negative_prompt":
+                            negative_prompt = widgets_values[0].strip()
+            # # 2. 负向提示词提取逻辑 (基本不变)
+            # for node in nodes:
+            #     title = node.get("title")
+            #     widgets_values = node.get("widgets_values")
+            #     properties = node.get("properties")
 
-            # 2. 负向提示词提取逻辑 (基本不变)
-            negative_prompts_list = []
-            for node in nodes:
-                # 负向提示词通常在没有特殊标题的 CLIPTextEncode 节点中
-                if node.get("type") == "CLIPTextEncode" and not node.get("title"):
-                    widgets_values = node.get("widgets_values")
-                    if widgets_values and isinstance(widgets_values, list) and len(widgets_values) > 0:
-                        text_content = str(widgets_values[0])
-                        if self.is_negative_prompt(text_content):
-                            negative_prompts_list.append(text_content.strip())
+            #     # 检查是否为 alekpet 节点
+            #     is_alekpet_node = False
+            #     if properties and isinstance(properties, dict):
+            #         if properties.get("cnr_id") == "rgthree-comfy":
+            #             is_alekpet_node = True
+
+            #     if is_alekpet_node:
+            #         if title == "negative_prompt":
+            #             negative_prompt = widgets_values[0].strip()
+
             
-            if negative_prompts_list:
-                negative_prompt = ", ".join(list(dict.fromkeys(negative_prompts_list)))
+            # negative_prompts_list = []
+            # for node in nodes:
+            #     # 负向提示词通常在没有特殊标题的 CLIPTextEncode 节点中
+            #     if node.get("type") == "CLIPTextEncode" and not node.get("title"):
+            #         widgets_values = node.get("widgets_values")
+            #         if widgets_values and isinstance(widgets_values, list) and len(widgets_values) > 0:
+            #             text_content = str(widgets_values[0])
+            #             if self.is_negative_prompt(text_content):
+            #                 negative_prompts_list.append(text_content.strip())
+            
+            # if negative_prompts_list:
+            #     negative_prompt = ", ".join(list(dict.fromkeys(negative_prompts_list)))
 
             # 3. 寻找CheckpointLoaderSimple节点 (逻辑不变)
             for node in nodes:
