@@ -19,16 +19,16 @@ class LatentLoaderAdvanced:
 
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "load_latent"
-    CATEGORY = "only/Latent"
+    CATEGORY = "latent"
     
     def load_latent(self, latent_file):
-        if latent_file.startswith("temp/"):
-            filename = latent_file[len("temp/"):]
-            # Directly and safely construct the full path of the temporary file
-            temp_dir = folder_paths.get_temp_directory()
-            latent_path = os.path.abspath(os.path.join(temp_dir, filename))
-            # Security check: ensure the final path is within the temp directory to prevent directory traversal attacks
-            if not latent_path.startswith(os.path.abspath(temp_dir)):
+        if latent_file.startswith("input/"):
+            filename = latent_file[len("input/"):]
+            # construct full path of the "input" file
+            input_dir = folder_paths.get_input_directory()
+            latent_path = os.path.abspath(os.path.join(input_dir, filename))
+            # Security check: ensure the final path is within the input directory to prevent directory traversal attacks
+            if not latent_path.startswith(os.path.abspath(input_dir)):
                 raise FileNotFoundError(f"Invalid path specified: {latent_file}")
         else:
             latent_path = folder_paths.get_annotated_filepath(latent_file)
@@ -81,5 +81,5 @@ NODE_CLASS_MAPPINGS = {
 
 # Node display name mappings
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LatentLoaderAdvanced": "Load Latent (Advanced)",
+    "LatentLoaderAdvanced": "Load Latent (Upload)",
 }

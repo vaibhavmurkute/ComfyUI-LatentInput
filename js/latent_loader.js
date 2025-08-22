@@ -14,10 +14,10 @@ app.registerExtension({
 				const uploadFile = async (file) => {
 					try {
 						const body = new FormData();
-						// Upload file to temp directory to avoid overwrite issues
+						// Upload file to input directory
 						body.append("image", file);
 						body.append("overwrite", "true");
-						body.append("type", "temp"); // Add this line
+						body.append("type", "input");
 						const resp = await api.fetchApi("/upload/image", {
 							method: "POST",
 							body,
