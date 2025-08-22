@@ -1,45 +1,45 @@
 import os
 import importlib
 
-# 告诉 ComfyUI 服务器我们的 Web 目录
+# Tell ComfyUI server our Web directory
 WEB_DIRECTORY = "./js"
 
-# ComfyUI 节点映射字典
+# ComfyUI node mapping dictionaries
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
 
-# 动态加载所有节点
+# Dynamically load all nodes
 # ======================================================================================================================
-# 获取当前文件所在目录
+# Get current file directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
 nodes_dir = os.path.join(current_dir, "nodes")
 
-# 遍历 nodes 目录下的所有 python 文件
+# Traverse all python files in nodes directory
 for filename in os.listdir(nodes_dir):
     if filename.endswith(".py") and filename != "__init__.py":
         module_name = f".nodes.{filename[:-3]}"
         try:
-            # 动态导入模块
+            # Dynamically import module
             module = importlib.import_module(module_name, package=__name__)
             
-            # 从模块中获取节点映射
+            # Get node mappings from module
             if hasattr(module, "NODE_CLASS_MAPPINGS") and hasattr(module, "NODE_DISPLAY_NAME_MAPPINGS"):
                 NODE_CLASS_MAPPINGS.update(module.NODE_CLASS_MAPPINGS)
                 NODE_DISPLAY_NAME_MAPPINGS.update(module.NODE_DISPLAY_NAME_MAPPINGS)
-                print(f"  - 成功加载模块: {module_name}")
+                print(f"  - Successfully loaded module: {module_name}")
             else:
-                print(f"  - 警告: 模块 {module_name} 缺少必要的映射变量")
+                print(f"  - Warning: Module {module_name} missing required mapping variables")
 
         except Exception as e:
-            print(f"  - 错误: 加载模块 {module_name} 失败 - {e}")
+            print(f"  - Error: Failed to load module {module_name} - {e}")
 # ======================================================================================================================
 
-# 导出ComfyUI需要的变量
+# Export variables required by ComfyUI
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
 
-print("🎨 ComfyUI-Only 自定义节点已加载")
-print(f"   - 前端扩展目录: {WEB_DIRECTORY}")
-print(f"   📦 已注册 {len(NODE_CLASS_MAPPINGS)} 个节点:")
+print("🎨 ComfyUI-Only custom nodes loaded")
+print(f"   - Frontend extension directory: {WEB_DIRECTORY}")
+print(f"   📦 Registered {len(NODE_CLASS_MAPPINGS)} nodes:")
 for name in NODE_CLASS_MAPPINGS.keys():
     display_name = NODE_DISPLAY_NAME_MAPPINGS.get(name, name)
     print(f"   - {name} ({display_name})")

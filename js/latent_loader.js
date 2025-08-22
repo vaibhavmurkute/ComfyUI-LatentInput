@@ -2,7 +2,7 @@ import { app } from "/scripts/app.js";
 import { api } from "/scripts/api.js";
 
 app.registerExtension({
-	name: "Comfy.LatentLoader.Advanced.Final", // 使用新名称以避免浏览器缓存问题
+	name: "Comfy.LatentLoader.Advanced.Final", // Use new name to avoid browser cache issues
 	async beforeRegisterNodeDef(nodeType, nodeData) {
 		if (nodeData.name === "LatentLoaderAdvanced") {
 			
@@ -10,14 +10,14 @@ app.registerExtension({
 			nodeType.prototype.onNodeCreated = function () {
 				onNodeCreated?.apply(this, arguments);
 
-				// 上传文件的共享函数
+				// Shared function for uploading files
 				const uploadFile = async (file) => {
 					try {
 						const body = new FormData();
-						// 将文件上传到临时目录，以避免覆盖问题
+						// Upload file to input directory
 						body.append("image", file);
 						body.append("overwrite", "true");
-						body.append("type", "temp"); // <--- 添加这一行
+						body.append("type", "input");
 						const resp = await api.fetchApi("/upload/image", {
 							method: "POST",
 							body,
@@ -25,7 +25,7 @@ app.registerExtension({
 
 						if (resp.status === 200) {
 							const data = await resp.json();
-							// 确保路径包含了 subfolder 和 type
+							// Ensure path includes subfolder and type
 							const path = `${data.type}/${data.subfolder ? `${data.subfolder}/` : ''}${data.name}`;
 							const textWidget = this.widgets.find((w) => w.name === "latent_file");
 							if (textWidget) {
@@ -40,7 +40,7 @@ app.registerExtension({
 					}
 				};
 
-				// “上传”按钮的逻辑
+				// Upload button logic
 				this.addWidget("button", "upload_latent", "Upload Latent", () => {
 					const inputEl = document.createElement("input");
 					inputEl.type = "file";
@@ -59,26 +59,26 @@ app.registerExtension({
 					inputEl.click();
 				});
 
-				// 拖拽事件处理
+				// Drag and drop event handling
 				this.onDragOver = function(e) {
-					// 检查拖拽的是否是文件
+					// Check if dragged items are files
 					if (e.dataTransfer?.types.includes("Files")) {
-						e.preventDefault(); // 关键：阻止浏览器默认行为，以允许拖放
+						e.preventDefault(); // Key: prevent browser default behavior to allow drop
 						return true;
 					}
 					return false;
 				};
 	
 				this.onDragDrop = async function(e) {
-					e.preventDefault();  // 关键：阻止浏览器默认行为
-					e.stopPropagation(); // 可选：阻止事件冒泡
+					e.preventDefault();  // Key: prevent browser default behavior
+					e.stopPropagation(); // Optional: prevent event bubbling
 					
 					let handled = false;
 					for (const file of e.dataTransfer.files) {
 						if (file.name.endsWith(".latent")) {
-							await uploadFile(file); // 等待上传完成
+							await uploadFile(file); // Wait for upload completion
 							handled = true;
-							break; // 只处理第一个有效文件
+							break; // Only process the first valid file
 						}
 					}
 					return handled;

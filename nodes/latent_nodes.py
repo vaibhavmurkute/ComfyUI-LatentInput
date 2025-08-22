@@ -7,7 +7,7 @@ import safetensors.torch
 
 class LatentLoaderAdvanced:
     """
-    一个高级 Latent 加载器，通过自定义前端 UI 支持从外部拖拽或上传 .latent 文件。
+    An advanced Latent loader that supports dragging or uploading .latent files from external sources through custom frontend UI.
     """
     @classmethod
     def INPUT_TYPES(cls):
@@ -19,16 +19,16 @@ class LatentLoaderAdvanced:
 
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "load_latent"
-    CATEGORY = "only/Latent"
+    CATEGORY = "latent"
     
     def load_latent(self, latent_file):
-        if latent_file.startswith("temp/"):
-            filename = latent_file[len("temp/"):]
-            # 直接、安全地构建临时文件的完整路径
-            temp_dir = folder_paths.get_temp_directory()
-            latent_path = os.path.abspath(os.path.join(temp_dir, filename))
-            # 安全检查：确保最终路径在 temp 目录内，防止目录遍历攻击
-            if not latent_path.startswith(os.path.abspath(temp_dir)):
+        if latent_file.startswith("input/"):
+            filename = latent_file[len("input/"):]
+            # construct full path of the "input" file
+            input_dir = folder_paths.get_input_directory()
+            latent_path = os.path.abspath(os.path.join(input_dir, filename))
+            # Security check: ensure the final path is within the input directory to prevent directory traversal attacks
+            if not latent_path.startswith(os.path.abspath(input_dir)):
                 raise FileNotFoundError(f"Invalid path specified: {latent_file}")
         else:
             latent_path = folder_paths.get_annotated_filepath(latent_file)
@@ -74,12 +74,12 @@ class LatentLoaderAdvanced:
             raise ValueError(f"Could not extract a valid latent tensor from '{latent_file}'. The format may not be recognized.")
 
 
-# 节点映射
+# Node mappings
 NODE_CLASS_MAPPINGS = {
     "LatentLoaderAdvanced": LatentLoaderAdvanced,
 }
 
-# 节点显示名称映射
+# Node display name mappings
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LatentLoaderAdvanced": "Load Latent (Advanced)",
+    "LatentLoaderAdvanced": "Load Latent (Upload)",
 }
